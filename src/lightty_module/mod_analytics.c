@@ -1,9 +1,9 @@
-/**********************                           mod_analytics lighttpd module                                                ************************/
-/**********************     On startup this module will check whether exw_paxus is configured. If yes, this will          ************************/
-/**********************     send logs of all the content served by lighttpd to paxususageserv. During its runtime         ************************/
-/**********************     if connection drops for some reasons, it will try to reconnect based on a timestamp           ************************/
-/**********************     it attempted to connect before. The timestamp will increase exponentially if it keeps .       ************************/
-/**********************     on failing. This will reduce connect and send calls thereby keeping this module light weight  ************************/
+/**********************                           mod_analytics lighttpd module                                             			     ************************/
+/**********************     On startup this module will check whether the daemon which will collect data is configured. If yes, this will    ************************/
+/**********************     send logs of all the content served by lighttpd to the daemon. During its runtime        					     ************************/
+/**********************     if connection drops for some reasons, it will try to reconnect based on a timestamp           					 ************************/
+/**********************     it attempted to connect before. The timestamp will increase exponentially if it keeps .       					 ************************/
+/**********************     on failing. This will reduce connect and send calls thereby keeping this module light weight  					 ************************/
 
 
 #include "base.h"
@@ -72,7 +72,7 @@ static void establish_connection(plugin_data *p)
 	
 	if ( connect ( p->sockfd, ( struct sockaddr* ) &p->addr, sizeof( p->addr ) ) == -1 )
 	{
-	  	perror ( "mod_paxus.so:connect error" );
+	  	perror ( "mod_analytics.so:connect error" );
 	  	p->connected = 0;
 	  	 
     	/****   Record initial timestamp when connect failed. Check for timestamp when trying to connect again from REQUEST_DONE func   ********/
@@ -98,14 +98,14 @@ INIT_FUNC(mod_paxus_init) {
 		p->time_stamp = 0;
 		p->retry_delay = 5;  
 		p->paxus_cfg = 0;
-		if (access ("/etc/lru/components/exw_paxus3air.cfg", F_OK ) != -1)
+		if (access ("/etc/lru/components/daemon.cfg", F_OK ) != -1)
 		{
 			p->paxus_cfg = 1;
-			p->socket_path = getenv("EXW_PAXUS3AIR_ACCESS_SOCK");
+			p->socket_path = getenv("DAEMON_ACCESS_SOCK");
 			if (p->socket_path==NULL)
 			{
 				perror( "cannot find environment variable for socket file using default path");
-				p->socket_path = "/var/spool/plugins/exwlogpipe";
+				p->socket_path = "/var/spool/plugins/daemonlogpipe";
 			}
 			establish_connection(p);
 		}
@@ -256,7 +256,7 @@ REQUESTDONE_FUNC(log_pana_write) {
 			
 			if(n < 0)
 			{
-				log_error_write(srv, __FILE__, __LINE__, "ss", " Error in sending data to paxususageserv",strerror(errno));
+				log_error_write(srv, __FILE__, __LINE__, "ss", " Error in sending data to Daemon",strerror(errno));
 				/***  Send call failed because the fd was not avaiable. Create a new fd. It will never send       *******/
 				/***  unless a connection is established again. The new connection will be established based on time stamp from this function itself***/
 
@@ -273,7 +273,7 @@ REQUESTDONE_FUNC(log_pana_write) {
 
 			if(n < 0)
 			{
-				log_error_write(srv, __FILE__, __LINE__, "ss", " Error in sending data to paxususageserv",strerror(errno));
+				log_error_write(srv, __FILE__, __LINE__, "ss", " Error in sending data to Daemon",strerror(errno));
 				/***  Send call failed because the fd was not avaiable. Create a new fd. It will never send       *******/
 				/***  unless a connection is established again. The new connection will be established based on time stamp from this function itself***/
 
