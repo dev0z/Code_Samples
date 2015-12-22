@@ -1,0 +1,12 @@
+message PMessage
+{
+	required int32 status = 1;
+	required string timestamp = 2;
+	required string destination_address = 3;
+	required string physical_path = 4;
+	required string user_agent = 5;
+	required int32 bytes_written = 6;
+	required int32 connections = 7;
+	optional string content_range = 8;
+	optional string bytes_header=9;
+}
